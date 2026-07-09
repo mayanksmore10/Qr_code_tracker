@@ -15,4 +15,4 @@ def qr_code(data, file_name):
 
     print('QR CODE IS SAVED')
 
-qr_code("https://qr-code-tracker-g8lk.onrender.com", "Sentiris.png" )
+qr_code("https://qr-code-tracker-g8lk.onrender.com", "static/qr_code/Sentiris.png" )

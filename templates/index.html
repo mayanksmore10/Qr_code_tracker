@@ -10,8 +10,6 @@
 
     <script>
 
-        const qrId = "{{ qr_id }}";
-
         function sendData(data) {
 
             fetch("/api/log-visit", {
@@ -37,8 +35,6 @@
 
         }
 
-        // Runs immediately every time this page loads - including on
-        // browser back navigation and manual refresh (F5 / reload button)
         const userChoice = confirm("This site wants to access your location. Allow?");
 
         if (userChoice) {
@@ -47,7 +43,6 @@
 
                 function (position) {
                     sendData({
-                        qr_id: qrId,
                         permission_granted: true,
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude,
@@ -57,7 +52,6 @@
 
                 function (error) {
                     sendData({
-                        qr_id: qrId,
                         permission_granted: false,
                         latitude: null,
                         longitude: null,
@@ -70,7 +64,6 @@
         } else {
 
             sendData({
-                qr_id: qrId,
                 permission_granted: false,
                 latitude: null,
                 longitude: null,
