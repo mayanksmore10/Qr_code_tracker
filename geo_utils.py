@@ -5,11 +5,7 @@ geolocator = Nominatim(user_agent="qr_tracker_app")
 
 
 def reverse_geocode(latitude: float, longitude: float):
-    """
-    Takes lat/lng, returns (place, suburb, road, pincode).
-    Returns all None values if geocoding fails, instead of raising -
-    so the caller never has to worry about this crashing the request.
-    """
+
     try:
         location = geolocator.reverse(
             f"{latitude}, {longitude}",

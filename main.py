@@ -12,7 +12,6 @@ from geo_utils import reverse_geocode
 app = FastAPI()
 
 # Allow all origins so Swagger UI, QR scan from any device, and Render work correctly.
-# Tighten this list (replace "*") once you know your production frontend URL.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -46,7 +45,7 @@ def track_visitor(qr_id: str):
     return FileResponse("templates/index.html")
 
 
-# Renamed from /api/log-visit — that path is blocked by most ad-blockers
+
 @app.post("/api/visit")
 def log_visit(visit: VisitCreate, db: Session = Depends(get_db)):
     try:

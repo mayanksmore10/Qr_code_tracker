@@ -14,8 +14,6 @@ if DATABASE_URL is None:
         "On Render: add DATABASE_URL in the Environment tab of your Web Service."
     )
 
-# Render (and some other hosts) provide the URL with the legacy "postgres://" scheme.
-# SQLAlchemy + psycopg2 requires "postgresql+psycopg2://", so we normalise it here.
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
 elif DATABASE_URL.startswith("postgresql://") and "+psycopg2" not in DATABASE_URL:
@@ -23,9 +21,7 @@ elif DATABASE_URL.startswith("postgresql://") and "+psycopg2" not in DATABASE_UR
 
 engine = create_engine(
     DATABASE_URL,
-    # pool_pre_ping checks the connection before using it from the pool.
-    # This prevents "connection closed" errors on Render's free tier, which
-    # idles database connections after periods of inactivity.
+
     pool_pre_ping=True,
 )
 
