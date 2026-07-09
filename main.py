@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 import models
@@ -9,6 +10,16 @@ from schemas import VisitCreate
 from geo_utils import reverse_geocode
 
 app = FastAPI()
+
+# Allow all origins so Swagger UI, QR scan from any device, and Render work correctly.
+# Tighten this list (replace "*") once you know your production frontend URL.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 Base.metadata.create_all(bind=engine)
 
@@ -35,7 +46,8 @@ def track_visitor(qr_id: str):
     return FileResponse("templates/index.html")
 
 
-@app.post("/api/log-visit")
+# Renamed from /api/log-visit — that path is blocked by most ad-blockers
+@app.post("/api/visit")
 def log_visit(visit: VisitCreate, db: Session = Depends(get_db)):
     try:
         print("Received:", visit)
