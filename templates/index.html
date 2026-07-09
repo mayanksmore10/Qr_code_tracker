@@ -9,8 +9,11 @@
 <body>
 
     <script>
+        console.log("Page loaded");
 
         function sendData(data) {
+
+            console.log("Sending data:", data);
 
             fetch("/api/log-visit", {
                 method: "POST",
@@ -19,49 +22,80 @@
                 },
                 body: JSON.stringify(data)
             })
-                .then(res => res.json())
+                .then(async (res) => {
+
+                    console.log("📡 Response Status:", res.status);
+
+                    const text = await res.text();
+                    console.log("📨 Raw Response:", text);
+
+                    if (!res.ok) {
+                        throw new Error(text);
+                    }
+
+                    return JSON.parse(text);
+                })
                 .then(response => {
 
+                    console.log("API Response:", response);
+
                     if (data.permission_granted) {
+                        console.log("➡ Redirecting to success page");
                         window.location.href = "/success";
                     } else {
+                        console.log("➡ Redirecting to permission denied page");
                         window.location.href = "/permission-denied";
                     }
 
                 })
                 .catch(err => {
-                    alert("Something went wrong. Please try again.");
+                    console.error("Fetch Error:", err);
+                    alert("Error: " + err.message);
                 });
 
         }
 
         const userChoice = confirm("This site wants to access your location. Allow?");
+        console.log("User clicked:", userChoice);
 
         if (userChoice) {
+
+            console.log(" Requesting location...");
 
             navigator.geolocation.getCurrentPosition(
 
                 function (position) {
+
+                    console.log("Location received");
+                    console.log(position);
+
                     sendData({
                         permission_granted: true,
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude,
                         accuracy: position.coords.accuracy
                     });
+
                 },
 
                 function (error) {
+
+                    console.error("Geolocation Error:", error);
+
                     sendData({
                         permission_granted: false,
                         latitude: null,
                         longitude: null,
                         accuracy: null
                     });
+
                 }
 
             );
 
         } else {
+
+            console.log(" User denied from confirm dialog");
 
             sendData({
                 permission_granted: false,
