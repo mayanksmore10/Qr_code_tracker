@@ -37,32 +37,38 @@ def track_visitor(qr_id: str):
 
 @app.post("/api/log-visit")
 def log_visit(visit: VisitCreate, db: Session = Depends(get_db)):
-    place, suburb, road, pincode = None, None, None, None
+    try:
+        print("Received:", visit)
 
-    if visit.permission_granted and visit.latitude is not None and visit.longitude is not None:
-        place, suburb, road, pincode = reverse_geocode(visit.latitude, visit.longitude)
+        place, suburb, road, pincode = None, None, None, None
 
-    new_visit = models.Visit(
-        latitude=visit.latitude,
-        longitude=visit.longitude,
-        place=place,
-        suburb=suburb,
-        road=road,
-        pincode=pincode,
-        permission_granted=visit.permission_granted
-    )
+        if visit.permission_granted and visit.latitude is not None:
+            place, suburb, road, pincode = reverse_geocode(
+                visit.latitude,
+                visit.longitude
+            )
 
-    db.add(new_visit)
-    db.commit()
-    db.refresh(new_visit)
+        new_visit = models.Visit(
+            latitude=visit.latitude,
+            longitude=visit.longitude,
+            place=place,
+            suburb=suburb,
+            road=road,
+            pincode=pincode,
+            permission_granted=visit.permission_granted
+        )
 
-    if visit.permission_granted:
-        message = "Permission granted. Ok."
-    else:
-        message = "Please grant location permission to proceed."
+        db.add(new_visit)
+        db.commit()
+        db.refresh(new_visit)
 
-    return {
-        "status": "success",
-        "message": message,
-        "visit_id": new_visit.id
-    }
+        print("Inserted ID:", new_visit.id)
+
+        return {
+            "status": "success",
+            "visit_id": new_visit.id
+        }
+
+    except Exception as e:
+        print("ERROR:", repr(e))
+        raise
