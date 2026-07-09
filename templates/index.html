@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Visitor Check-in</title>
+</head>
+
+<body>
+
+    <script>
+
+        const qrId = "{{ qr_id }}";
+
+        function sendData(data) {
+
+            fetch("/api/log-visit", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+                .then(res => res.json())
+                .then(response => {
+
+                    if (data.permission_granted) {
+                        window.location.href = "/success";
+                    } else {
+                        window.location.href = "/permission-denied";
+                    }
+
+                })
+                .catch(err => {
+                    alert("Something went wrong. Please try again.");
+                });
+
+        }
+
+        // Runs immediately every time this page loads - including on
+        // browser back navigation and manual refresh (F5 / reload button)
+        const userChoice = confirm("This site wants to access your location. Allow?");
+
+        if (userChoice) {
+
+            navigator.geolocation.getCurrentPosition(
+
+                function (position) {
+                    sendData({
+                        qr_id: qrId,
+                        permission_granted: true,
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    });
+                },
+
+                function (error) {
+                    sendData({
+                        qr_id: qrId,
+                        permission_granted: false,
+                        latitude: null,
+                        longitude: null,
+                        accuracy: null
+                    });
+                }
+
+            );
+
+        } else {
+
+            sendData({
+                qr_id: qrId,
+                permission_granted: false,
+                latitude: null,
+                longitude: null,
+                accuracy: null
+            });
+
+        }
+
+    </script>
+
+</body>
+
+</html>
