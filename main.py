@@ -40,10 +40,6 @@ def permission_denied_page():
     return FileResponse("templates/permission_denied.html")
 
 
-@app.get("/track/{qr_id}")
-def track_visitor(qr_id: str):
-    return FileResponse("templates/index.html")
-
 
 
 @app.post("/api/visit")
