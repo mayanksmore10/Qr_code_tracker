@@ -7,3 +7,4 @@ qrcode[pil]
 jinja2
 geopy
 python-multipart
+user-agents

@@ -7,3 +7,4 @@ class VisitCreate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     accuracy: Optional[float] = None
+    device_type: Optional[str] = None

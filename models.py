@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Date
 from database import Base
 from datetime import datetime, timezone, timedelta
 
@@ -16,7 +16,10 @@ class Visit(Base):
     suburb = Column(String, nullable=True)
     road = Column(String, nullable=True)
     pincode = Column(String, nullable=True)
-
+    device_type = Column(String, nullable=True)   # mobile / tablet / desktop
     permission_granted = Column(Boolean, default=False)
+    hour = Column(Integer, nullable=True)
+  
 
+    date = Column(Date, default=lambda: datetime.now(IST).date())
     timestamp = Column(DateTime, default=lambda: datetime.now(IST))

@@ -3,7 +3,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-
+from user_agents import parse
+from fastapi import Request
 import models
 from database import Base, engine, get_db
 from schemas import VisitCreate
@@ -43,7 +44,7 @@ def permission_denied_page():
 
 
 @app.post("/api/visit")
-def log_visit(visit: VisitCreate, db: Session = Depends(get_db)):
+def log_visit(visit: VisitCreate, request: Request, db: Session = Depends(get_db)):
     try:
         print("Received:", visit)
 
@@ -55,6 +56,19 @@ def log_visit(visit: VisitCreate, db: Session = Depends(get_db)):
                 visit.longitude
             )
 
+        # Detect device type from User-Agent header
+        ua_string = request.headers.get("user-agent", "")
+        ua = parse(ua_string)
+        if ua.is_mobile:
+            detected_device_type = "mobile"
+        elif ua.is_tablet:
+            detected_device_type = "tablet"
+        else:
+            detected_device_type = "desktop"
+
+        # Use client-supplied value if provided, else use detected value
+        device_type = visit.device_type or detected_device_type
+
         new_visit = models.Visit(
             latitude=visit.latitude,
             longitude=visit.longitude,
@@ -62,7 +76,8 @@ def log_visit(visit: VisitCreate, db: Session = Depends(get_db)):
             suburb=suburb,
             road=road,
             pincode=pincode,
-            permission_granted=visit.permission_granted
+            permission_granted=visit.permission_granted,
+            device_type=device_type,
         )
 
         db.add(new_visit)
@@ -79,3 +94,4 @@ def log_visit(visit: VisitCreate, db: Session = Depends(get_db)):
     except Exception as e:
         print("ERROR:", repr(e))
         raise
+
