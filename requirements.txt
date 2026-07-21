@@ -8,3 +8,13 @@ jinja2
 geopy
 python-multipart
 user-agents
+
+# ── Dashboard ──────────────────────────────────────────────────────────────────
+streamlit
+matplotlib
+seaborn
+pandas
+
+# ── PDF export (Playwright) ────────────────────────────────────────────────────
+# After pip install, also run:  playwright install chromium
+playwright

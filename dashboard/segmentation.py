@@ -1,6 +1,5 @@
 import pandas as pd
 def place_frequency_segmentation(df: pd.DataFrame, place_col: str = "place") -> pd.DataFrame:
-
     if place_col not in df.columns:
         raise ValueError(f"'{place_col}' column not found in the data.")
 
@@ -14,6 +13,8 @@ def place_frequency_segmentation(df: pd.DataFrame, place_col: str = "place") -> 
         frequency=("timestamp", "count"),
     )
     grouped["recency_days"] = (now - grouped["last_visit"]).dt.days
+
+    
     try:
         grouped["r_score"] = pd.qcut(grouped["recency_days"].rank(ascending=False, method="first"), 4, labels=[1, 2, 3, 4])
         grouped["f_score"] = pd.qcut(grouped["frequency"].rank(method="first"), 4, labels=[1, 2, 3, 4])
@@ -37,7 +38,6 @@ def place_frequency_segmentation(df: pd.DataFrame, place_col: str = "place") -> 
 
 
 def suburb_frequency(df: pd.DataFrame, suburb_col: str = "suburb") -> pd.DataFrame:
-
     grouped = df.groupby(suburb_col).agg(
         total_visits=("timestamp", "count"),
         first_visit=("timestamp", "min"),

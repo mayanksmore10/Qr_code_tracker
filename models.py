@@ -19,7 +19,5 @@ class Visit(Base):
     device_type = Column(String, nullable=True)   # mobile / tablet / desktop
     permission_granted = Column(Boolean, default=False)
     hour = Column(Integer, nullable=True)
-  
-
     date = Column(Date, default=lambda: datetime.now(IST).date())
     timestamp = Column(DateTime, default=lambda: datetime.now(IST))
