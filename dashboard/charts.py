@@ -31,7 +31,7 @@ def top_places(df: pd.DataFrame, place_col: str = "suburb", top_n: int = 10) -> 
 
 
 def device_distribution(df: pd.DataFrame) -> plt.Figure:
-    counts = df["device_type"].value_counts()
+    counts = df["device_type"].str.strip().str.title().value_counts()
 
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.pie(

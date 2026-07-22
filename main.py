@@ -5,10 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from user_agents import parse
 from fastapi import Request
+from datetime import datetime, timezone, timedelta
 import models
 from database import Base, engine, get_db
 from schemas import VisitCreate
 from geo_utils import reverse_geocode
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 app = FastAPI()
 
@@ -69,6 +72,8 @@ def log_visit(visit: VisitCreate, request: Request, db: Session = Depends(get_db
         # Use client-supplied value if provided, else use detected value
         device_type = visit.device_type or detected_device_type
 
+        now_ist = datetime.now(IST)
+
         new_visit = models.Visit(
             latitude=visit.latitude,
             longitude=visit.longitude,
@@ -78,6 +83,9 @@ def log_visit(visit: VisitCreate, request: Request, db: Session = Depends(get_db
             pincode=pincode,
             permission_granted=visit.permission_granted,
             device_type=device_type,
+            hour=now_ist.hour,
+            date=now_ist.date(),
+            timestamp=now_ist,
         )
 
         db.add(new_visit)
