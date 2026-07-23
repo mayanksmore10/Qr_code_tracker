@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 _ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=_ENV_PATH)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_RENDER_URL")
 
 if not DATABASE_URL:
     raise RuntimeError(
