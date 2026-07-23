@@ -7,14 +7,12 @@
 </head>
 
 <body>
-    <h1>Visitor Check-in</h1>
-    <p>Click the button below to allow access to your location.</p>
-    <button id="locationButton">Allow Location</button>
 
     <script>
         console.log("Page loaded");
 
         function sendData(data) {
+
             console.log("Sending data:", data);
 
             fetch("/api/visit", {
@@ -25,6 +23,7 @@
                 body: JSON.stringify(data)
             })
                 .then(async (res) => {
+
                     console.log("📡 Response Status:", res.status);
 
                     const text = await res.text();
@@ -37,6 +36,7 @@
                     return JSON.parse(text);
                 })
                 .then(response => {
+
                     console.log("API Response:", response);
 
                     if (data.permission_granted) {
@@ -46,29 +46,26 @@
                         console.log("➡ Redirecting to permission denied page");
                         window.location.href = "/permission-denied";
                     }
+
                 })
                 .catch(err => {
                     console.error("Fetch Error:", err);
                     alert("Error: " + err.message);
                 });
+
         }
 
-        document.getElementById("locationButton").addEventListener("click", function () {
-            console.log("Requesting location from user click...");
+        const userChoice = confirm("This site wants to access your location. Allow?");
+        console.log("User clicked:", userChoice);
 
-            if (!navigator.geolocation) {
-                console.error("Geolocation is not supported by this browser.");
-                sendData({
-                    permission_granted: false,
-                    latitude: null,
-                    longitude: null,
-                    accuracy: null
-                });
-                return;
-            }
+        if (userChoice) {
+
+            console.log(" Requesting location...");
 
             navigator.geolocation.getCurrentPosition(
+
                 function (position) {
+
                     console.log("Location received");
                     console.log(position);
 
@@ -78,8 +75,11 @@
                         longitude: position.coords.longitude,
                         accuracy: position.coords.accuracy
                     });
+
                 },
+
                 function (error) {
+
                     console.error("Geolocation Error:", error);
 
                     sendData({
@@ -88,9 +88,24 @@
                         longitude: null,
                         accuracy: null
                     });
+
                 }
+
             );
-        });
+
+        } else {
+
+            console.log(" User denied from confirm dialog");
+
+            sendData({
+                permission_granted: false,
+                latitude: null,
+                longitude: null,
+                accuracy: null
+            });
+
+        }
+
     </script>
 
 </body>
