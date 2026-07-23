@@ -1,62 +1,52 @@
-from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut, GeocoderServiceError
+import requests
 import traceback
 
-geolocator = Nominatim(user_agent="qr_tracker_app_v2")
+BIGDATA_URL = "https://api.bigdatacloud.net/data/reverse-geocode-client"
 
 
 def reverse_geocode(latitude: float, longitude: float):
+    """Reverse-geocode using BigDataCloud (free, no API key required)."""
 
     try:
         print(f"[GEO] Reverse geocoding: lat={latitude}, lon={longitude}")
 
-        location = geolocator.reverse(
-            f"{latitude}, {longitude}",
-            exactly_one=True,
-            addressdetails=True,
-            timeout=10
+        resp = requests.get(
+            BIGDATA_URL,
+            params={
+                "latitude": latitude,
+                "longitude": longitude,
+                "localityLanguage": "en",
+            },
+            timeout=10,
         )
+        resp.raise_for_status()
+        data = resp.json()
 
-        if location is None:
-            print("[GEO] Nominatim returned None (no location found)")
-            return None, None, None, None
+        print(f"[GEO] BigDataCloud response keys: {list(data.keys())}")
 
-        if "address" not in location.raw:
-            print(f"[GEO] No 'address' key in response. Raw: {location.raw}")
-            return None, None, None, None
-
-        address = location.raw["address"]
-        print(f"[GEO] Raw address fields: {address}")
-
-        # Expanded fallbacks to cover Indian city/district naming
+        # Extract fields with fallbacks
         place = (
-            address.get("city")
-            or address.get("town")
-            or address.get("municipality")
-            or address.get("village")
-            or address.get("state_district")
-            or address.get("district")
-            or address.get("county")
+            data.get("city")
+            or data.get("locality")
+            or data.get("principalSubdivision")
         )
         suburb = (
-            address.get("suburb")
-            or address.get("neighbourhood")
-            or address.get("quarter")
-            or address.get("residential")
-            or address.get("county")   # fallback for Indian peri-urban areas
+            data.get("locality")
+            if data.get("city")
+            else None
         )
-        road = address.get("road") or address.get("pedestrian") or address.get("footway")
-        pincode = address.get("postcode")
+        road = None  # BigDataCloud free tier doesn't return road-level data
+        pincode = data.get("postcode") or None
 
         print(f"[GEO] Resolved -> place={place}, suburb={suburb}, road={road}, pincode={pincode}")
 
         return place, suburb, road, pincode
 
-    except GeocoderTimedOut:
-        print("[GEO] ERROR: Nominatim request timed out")
+    except requests.exceptions.Timeout:
+        print("[GEO] ERROR: BigDataCloud request timed out")
         return None, None, None, None
-    except GeocoderServiceError as e:
-        print(f"[GEO] ERROR: Nominatim service error: {e}")
+    except requests.exceptions.RequestException as e:
+        print(f"[GEO] ERROR: BigDataCloud request error: {e}")
         return None, None, None, None
     except Exception as e:
         print(f"[GEO] ERROR: Unexpected error during reverse geocoding: {e}")

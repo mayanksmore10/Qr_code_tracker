@@ -5,7 +5,7 @@ psycopg2-binary
 python-dotenv
 qrcode[pil]
 jinja2
-geopy
+requests
 python-multipart
 user-agents
 
