@@ -8,7 +8,7 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_RENDER_URL")
 if not DATABASE_URL:
-    raise RuntimeError("DATABASE_RENDER_URL not found - make sure .env is in the current directory.")
+    raise RuntimeError("DATABASE_URL not found - make sure .env is in the current directory.")
 
 engine_url = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 engine = create_engine(engine_url)
