@@ -3,111 +3,205 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visitor Check-in</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Segoe UI', sans-serif;
+            color: #e2e8f0;
+            padding: 1rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.9rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s, transform 0.1s;
+            margin-bottom: 0.75rem;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-allow {
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: white;
+        }
+
+        .btn-deny {
+            background: rgba(255, 255, 255, 0.07);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #status {
+            margin-top: 1.2rem;
+            font-size: 0.85rem;
+            color: #7dd3fc;
+            min-height: 1.2rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #38bdf8;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 </head>
 
 <body>
+    <div class="card">
+        <div class="icon">📍</div>
+        <h1>Visitor Check-in</h1>
+        <p>Tap <strong>Allow Location</strong> to check in. Your location helps us understand visitor patterns.</p>
+
+        <button class="btn btn-allow" id="allowBtn" onclick="requestLocation()">
+            📍 Allow Location
+        </button>
+        <button class="btn btn-deny" id="denyBtn" onclick="denyLocation()">
+            Skip
+        </button>
+
+        <div id="status"></div>
+    </div>
 
     <script>
-        console.log("Page loaded");
+        function setStatus(msg, spinner) {
+            const el = document.getElementById("status");
+            el.innerHTML = spinner
+                ? `<span class="spinner"></span>${msg}`
+                : msg;
+        }
+
+        function disableBtns() {
+            document.getElementById("allowBtn").disabled = true;
+            document.getElementById("denyBtn").disabled = true;
+        }
 
         function sendData(data) {
-
-            console.log("Sending data:", data);
+            console.log("Sending:", data);
 
             fetch("/api/visit", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             })
-                .then(async (res) => {
-
-                    console.log("📡 Response Status:", res.status);
-
+                .then(async res => {
                     const text = await res.text();
-                    console.log("📨 Raw Response:", text);
-
-                    if (!res.ok) {
-                        throw new Error(text);
-                    }
-
+                    if (!res.ok) throw new Error(text);
                     return JSON.parse(text);
                 })
-                .then(response => {
-
-                    console.log("API Response:", response);
-
+                .then(() => {
                     if (data.permission_granted) {
-                        console.log("➡ Redirecting to success page");
                         window.location.href = "/success";
                     } else {
-                        console.log("➡ Redirecting to permission denied page");
                         window.location.href = "/permission-denied";
                     }
-
                 })
                 .catch(err => {
                     console.error("Fetch Error:", err);
-                    alert("Error: " + err.message);
+                    setStatus("⚠️ Error: " + err.message, false);
                 });
-
         }
 
-        const userChoice = confirm("This site wants to access your location. Allow?");
-        console.log("User clicked:", userChoice);
-
-        if (userChoice) {
-
-            console.log(" Requesting location...");
+        function requestLocation() {
+            disableBtns();
+            setStatus("Getting your location…", true);
 
             navigator.geolocation.getCurrentPosition(
-
                 function (position) {
-
-                    console.log("Location received");
-                    console.log(position);
-
+                    setStatus("✅ Location received!", false);
                     sendData({
                         permission_granted: true,
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude,
                         accuracy: position.coords.accuracy
                     });
-
                 },
-
                 function (error) {
-
-                    console.error("Geolocation Error:", error);
-
+                    console.error("Geolocation error:", error);
+                    setStatus("Location blocked — logging visit without location.", false);
                     sendData({
                         permission_granted: false,
                         latitude: null,
                         longitude: null,
                         accuracy: null
                     });
-
-                }
-
+                },
+                { timeout: 15000, maximumAge: 0 }
             );
+        }
 
-        } else {
-
-            console.log(" User denied from confirm dialog");
-
+        function denyLocation() {
+            disableBtns();
+            setStatus("Logging visit…", true);
             sendData({
                 permission_granted: false,
                 latitude: null,
                 longitude: null,
                 accuracy: null
             });
-
         }
-
     </script>
-
 </body>
 
 </html>
