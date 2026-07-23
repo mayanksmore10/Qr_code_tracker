@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_RENDER_URL")
 if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL not found - make sure .env is in the current directory.")
+    raise RuntimeError("DATABASE_RENDER_URL not found - make sure .env is in the current directory.")
 
 engine_url = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 engine = create_engine(engine_url)
@@ -41,9 +41,9 @@ def generate_record():
     suburb_index = random.choices(range(len(SUBURBS)), weights=SUBURB_WEIGHTS)[0]
 
     return {
-        "timestamp": ts,
-        "date": ts.date(),
-        "hour":ts.hour,
+        "timestamp": ts.astimezone(timezone.utc).replace(tzinfo=None),  # naive UTC
+        "date": ts.date().isoformat(),          # 'YYYY-MM-DD' string
+        "hour": int(ts.hour),                   # plain int
         "latitude": BASE_LAT + random.uniform(-0.05, 0.05),
         "longitude": BASE_LNG + random.uniform(-0.05, 0.05),
         "place": PLACES[suburb_index],

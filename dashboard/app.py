@@ -22,7 +22,6 @@ except RuntimeError as _db_err:
     st.stop()
 
 from charts import visits_over_time, top_places, device_distribution, date_hour_heatmap
-from segmentation import place_frequency_segmentation
 
 st.markdown(
     """
@@ -103,25 +102,4 @@ st.subheader("🔥 Visit Activity Heatmap (Date × Hour)")
 fig_heat = date_hour_heatmap(df)
 st.pyplot(fig_heat, use_container_width=True)
 plt.close(fig_heat)
-
-st.divider()
-
-st.subheader("🧠 Place Segmentation (RFM-style)")
-seg_df = place_frequency_segmentation(df, place_col="place")
-segment_colors = {
-    "Hotspot (frequent & recent)":  "🟢",
-    "Emerging (recent, low volume)": "🔵",
-    "Cooling off (was frequent)":   "🟡",
-    "Low activity":                 "🔴",
-}
-seg_df["Segment"] = seg_df["segment"].map(lambda s: f"{segment_colors.get(s, '⚪')} {s}")
-display_cols = ["place", "frequency", "recency_days", "r_score", "f_score", "Segment"]
-st.dataframe(
-    seg_df[display_cols].rename(columns={
-        "place": "Place", "frequency": "Visits",
-        "recency_days": "Days Since Last Visit",
-        "r_score": "Recency Score", "f_score": "Frequency Score",
-    }),
-    use_container_width=True, hide_index=True,
-)
 
