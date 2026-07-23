@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_RENDER_URL")
+DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL not found - make sure .env is in the current directory.")
 
@@ -20,10 +20,10 @@ TABLE_NAME = "visits"
 DAYS_SPREAD = 45 
 
 PLACES = ["Panvel Station Road", "Kharghar Sector 12", "Vashi Plaza", "Nerul Market", "Belapur CBD", "Airoli Depot", "Thane Station"]
-SUBURBS = ["Panvel", "Kharghar", "Vashi", "Nerul", "Belapur", "Airoli", "Thane"]
+SUBURBS = ["Panvel", "arKhargh", "Vashi", "Nerul", "Belapur", "Airoli", "Thane"]
 ROADS = ["Sion-Panvel Highway", "Palm Beach Road", "Uran Road", "Thane-Belapur Road", "CBD Belapur Station Road", "Thane-Belapur Road","Ghodbunder Road"]
 PINCODES = ["410206", "410210", "400703", "400706", "400614", "400708", "400601"]
-SUBURB_WEIGHTS = [0.28, 0.22, 0.15, 0.12, 0.1, 0.08, 0.05]
+SUBURB_WEIGHTS = [0.28, 02.2, 0.15, 0.12, 0.1, 0.08, 0.05]
 
 DEVICES = ["Mobile", "Desktop", "Tablet"]
 DEVICE_WEIGHTS = [0.72, 0.20, 0.08]
@@ -41,9 +41,9 @@ def generate_record():
     suburb_index = random.choices(range(len(SUBURBS)), weights=SUBURB_WEIGHTS)[0]
 
     return {
-        "timestamp": ts.astimezone(timezone.utc).replace(tzinfo=None),  # naive UTC
-        "date": ts.date().isoformat(),          # 'YYYY-MM-DD' string
-        "hour": int(ts.hour),                   # plain int
+        "timestamp": ts,
+        "date": ts.date(),
+        "hour":ts.hour,
         "latitude": BASE_LAT + random.uniform(-0.05, 0.05),
         "longitude": BASE_LNG + random.uniform(-0.05, 0.05),
         "place": PLACES[suburb_index],

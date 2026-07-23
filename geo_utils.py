@@ -1,29 +1,59 @@
 from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut, GeocoderServiceError
+from geopy.exc import GeocoderTimedOut, GeocoderServiceError, GeocoderRateLimited
 import traceback
+from time import monotonic, sleep
 
 geolocator = Nominatim(user_agent="qr_tracker_app_v2")
 
+GEOCODE_CACHE = {}
+_LAST_NOMINATIM_REQUEST_AT = 0.0
+NOMINATIM_MIN_INTERVAL_SECONDS = 1.0
+
+
+def _cache_key(latitude: float, longitude: float):
+    return (round(latitude, 5), round(longitude, 5))
+
+
+def _reverse_geocode_with_throttle(latitude: float, longitude: float):
+    global _LAST_NOMINATIM_REQUEST_AT
+
+    now = monotonic()
+    elapsed = now - _LAST_NOMINATIM_REQUEST_AT
+    if elapsed < NOMINATIM_MIN_INTERVAL_SECONDS:
+        sleep(NOMINATIM_MIN_INTERVAL_SECONDS - elapsed)
+
+    _LAST_NOMINATIM_REQUEST_AT = monotonic()
+
+    return geolocator.reverse(
+        f"{latitude}, {longitude}",
+        exactly_one=True,
+        addressdetails=True,
+        timeout=10
+    )
+
 
 def reverse_geocode(latitude: float, longitude: float):
+    cache_key = _cache_key(latitude, longitude)
+    if cache_key in GEOCODE_CACHE:
+        print(f"[GEO] Using cached reverse geocode for {cache_key}")
+        return GEOCODE_CACHE[cache_key]
 
     try:
         print(f"[GEO] Reverse geocoding: lat={latitude}, lon={longitude}")
 
-        location = geolocator.reverse(
-            f"{latitude}, {longitude}",
-            exactly_one=True,
-            addressdetails=True,
-            timeout=10
-        )
+        location = _reverse_geocode_with_throttle(latitude, longitude)
 
         if location is None:
             print("[GEO] Nominatim returned None (no location found)")
-            return None, None, None, None
+            result = None, None, None, None
+            GEOCODE_CACHE[cache_key] = result
+            return result
 
         if "address" not in location.raw:
             print(f"[GEO] No 'address' key in response. Raw: {location.raw}")
-            return None, None, None, None
+            result = None, None, None, None
+            GEOCODE_CACHE[cache_key] = result
+            return result
 
         address = location.raw["address"]
         print(f"[GEO] Raw address fields: {address}")
@@ -50,15 +80,28 @@ def reverse_geocode(latitude: float, longitude: float):
 
         print(f"[GEO] Resolved -> place={place}, suburb={suburb}, road={road}, pincode={pincode}")
 
-        return place, suburb, road, pincode
+        result = place, suburb, road, pincode
+        GEOCODE_CACHE[cache_key] = result
+        return result
 
+    except GeocoderRateLimited as e:
+        print(f"[GEO] ERROR: Nominatim rate limited: {e}")
+        result = None, None, None, None
+        GEOCODE_CACHE[cache_key] = result
+        return result
     except GeocoderTimedOut:
         print("[GEO] ERROR: Nominatim request timed out")
-        return None, None, None, None
+        result = None, None, None, None
+        GEOCODE_CACHE[cache_key] = result
+        return result
     except GeocoderServiceError as e:
         print(f"[GEO] ERROR: Nominatim service error: {e}")
-        return None, None, None, None
+        result = None, None, None, None
+        GEOCODE_CACHE[cache_key] = result
+        return result
     except Exception as e:
         print(f"[GEO] ERROR: Unexpected error during reverse geocoding: {e}")
         traceback.print_exc()
-        return None, None, None, None
+        result = None, None, None, None
+        GEOCODE_CACHE[cache_key] = result
+        return result
